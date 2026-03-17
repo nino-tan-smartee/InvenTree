@@ -181,11 +181,12 @@ class AppMixinTest(BaseMixinDefinition, TestCase):
         fake_all_models = defaultdict(OrderedDict)
         fake_all_models[app_name]['purchasequotation'] = mock_model
 
-        with patch(
-            'plugin.base.integration.AppMixin.apps.get_app_config',
-            return_value=mock_app_config,
-        ), patch(
-            'plugin.base.integration.AppMixin.apps.all_models', fake_all_models
+        with (
+            patch(
+                'plugin.base.integration.AppMixin.apps.get_app_config',
+                return_value=mock_app_config,
+            ),
+            patch('plugin.base.integration.AppMixin.apps.all_models', fake_all_models),
         ):
             # This should NOT raise KeyError - the fix ensures we use
             # app_name (the last path component) instead of the full plugin_path
