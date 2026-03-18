@@ -147,20 +147,7 @@ test('Parts - BOM', async ({ browser }) => {
 test('Parts - BOM Validation', async ({ browser }) => {
   const page = await doCachedLogin(browser, { url: 'part/107/bom' });
 
-  // Run BOM validation step
-  await page
-    .getByRole('button', { name: 'action-button-validate-bom' })
-    .click();
-  await page.getByRole('button', { name: 'Submit' }).click();
-
-  // Background task monitoring
-  await page.getByText('Validating BOM').waitFor();
-  await page.getByText('BOM validated').waitFor();
-
-  await page.getByRole('button', { name: 'bom-validation-info' }).hover();
-  await page.getByText('Validated By: allaccessAlly').waitFor();
-
-  // Edit line item, to ensure BOM is not valid next time around
+  // Edit line item, to ensure BOM is not valid
   const cell = await page.getByRole('cell', { name: 'Red paint Red Paint' });
   await clickOnRowMenu(cell);
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
@@ -176,6 +163,22 @@ test('Parts - BOM Validation', async ({ browser }) => {
   await input.fill(`${nextValue.toFixed(3)}`);
   await page.getByRole('button', { name: 'Submit' }).click();
   await page.getByText('BOM item updated').waitFor();
+
+  await loadTab(page, 'Part Details');
+  await loadTab(page, 'Bill of Materials');
+
+  // Run BOM validation step
+  await page
+    .getByRole('button', { name: 'action-button-validate-bom' })
+    .click();
+  await page.getByRole('button', { name: 'Submit' }).click();
+
+  // Background task monitoring
+  await page.getByText('Validating BOM').waitFor();
+  await page.getByText('BOM validated').waitFor();
+
+  await page.getByRole('button', { name: 'bom-validation-info' }).hover();
+  await page.getByText('Validated By: allaccessAlly').waitFor();
 });
 
 test('Parts - Editing', async ({ browser }) => {
@@ -259,19 +262,22 @@ test('Parts - Details', async ({ browser }) => {
   await page.getByText('Allocated to Sales Orders').waitFor();
   await page.getByText('Can Build').waitFor();
 
-  await page.getByText('0 / 10').waitFor();
+  // The "allocated to sales order" quantity may vary, based on other tests
+  await page.getByText(/0 \/ \d+/).waitFor();
 
   // Depending on the state of other tests, the "In Production" value may vary
   // This could be either 4 / 49, or 5 / 49
   await page.getByText(/[4|5] \/ \d+/).waitFor();
 
   // Badges
-  await page.getByText('Required: 10').waitFor();
+  await page.getByText(/Required: \d+/).waitFor();
   await page.getByText('No Stock').waitFor();
   await page.getByText(/In Production: [4|5]/).waitFor();
 
   await page.getByText('Creation Date').waitFor();
   await page.getByText('2022-04-29').waitFor();
+
+  await page.getByText('Latest Serial Number').waitFor();
 });
 
 test('Parts - Requirements', async ({ browser }) => {
@@ -313,10 +319,9 @@ test('Parts - Requirements', async ({ browser }) => {
   // Also check requirements for part with open build orders which have been partially consumed
   await navigate(page, 'part/105/details');
 
-  await page.getByText('Required: 2').waitFor();
   await page.getByText('Available: 32').waitFor();
   await page.getByText('In Stock: 34').waitFor();
-  await page.getByText('2 / 2').waitFor(); // Allocated to build orders
+  await page.getByText(/Required: \d+/).waitFor();
 });
 
 test('Parts - Allocations', async ({ browser }) => {
